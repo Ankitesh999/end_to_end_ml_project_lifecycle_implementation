@@ -50,3 +50,27 @@ def evaluate_models(X_train, y_train, X_test, y_test, models, params):
     except Exception as e:
         logging.error(f"Error in evaluate_models: {e}")
         raise CustomException(e, sys)
+    
+def load_object(file_path, trusted_dir='artifacts', safe_mode=True):
+    """
+    Load a pickled object from file. WARNING: Only load trusted pickle files. Untrusted pickle files can execute arbitrary code.
+    Args:
+        file_path (str): Path to the pickle file.
+        trusted_dir (str): Directory that must contain the pickle file.
+        safe_mode (bool): If True, only allow loading from trusted_dir. If False, allow any path (not recommended).
+    Returns:
+        The loaded object.
+    Raises:
+        CustomException: If file is not in trusted_dir or loading fails.
+    """
+    try:
+        abs_path = os.path.abspath(file_path)
+        trusted_dir_abs = os.path.abspath(trusted_dir)
+        if safe_mode and not abs_path.startswith(trusted_dir_abs):
+            raise CustomException(f"Refusing to load pickle from untrusted location: {file_path}", sys)
+        # For model artifacts, consider using joblib or ONNX for safer deserialization
+        with open(file_path, 'rb') as file_obj:
+            return pickle.load(file_obj)
+    except Exception as e:
+        logging.error(f"Error in load_object: {e}")
+        raise CustomException(e, sys)
